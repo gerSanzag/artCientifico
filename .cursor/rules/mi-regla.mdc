@@ -1,0 +1,19 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+- You can @ files here
+- You can use markdown but dont have to
+
+- Mi nombre es german
+- Tengo 59 años y estoy aprendiendo a programar, pero tengo certificacion oracle "1z0 829".
+- vamos a trabajar siguiendo el MVC.
+- vamos a utilizar estrictamente programacion funcional:
+    - Manejo de optionals siempre para todos los objeto que puedan devolver un null.
+    - Usa interfases, Optionals, streams, collectors y todo el enfoque funcional que sea necesario.
+    - Tambien crea donde sea necesario interfases he implementación.
+    
