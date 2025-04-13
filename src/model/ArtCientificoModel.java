@@ -15,7 +15,7 @@ public class ArtCientificoModel {
     private final Integer anio;
     private final String resumen;
     
-    private ArtCientificoModel(Builder builder) {
+    private ArtCientificoModel(BuilderModel builder) {
         this.nombre = builder.nombre;
         this.autor = builder.autor;
         this.palabrasClaves = builder.palabrasClaves != null ? builder.palabrasClaves : new ArrayList<>();
@@ -56,16 +56,16 @@ public class ArtCientificoModel {
     }
     
     /**
-     * Builder para crear instancias de ArtCientificoModel
+     * BuilderModel para crear instancias de ArtCientificoModel
      */
-    public static class Builder {
+    public static class BuilderModel {
         private String nombre;
         private String autor;
         private List<String> palabrasClaves;
         private Integer anio;
         private String resumen;
         
-        public Builder() {
+        public BuilderModel() {
             this.palabrasClaves = new ArrayList<>();
         }
         
@@ -74,7 +74,7 @@ public class ArtCientificoModel {
          * @param nombre el nombre del artículo (encapsulado en Optional)
          * @return el builder para encadenamiento
          */
-        public Builder conNombre(Optional<String> nombre) {
+        public BuilderModel conNombre(Optional<String> nombre) {
             nombre.ifPresent(n -> this.nombre = n);
             return this;
         }
@@ -84,7 +84,7 @@ public class ArtCientificoModel {
          * @param autor el autor del artículo (encapsulado en Optional)
          * @return el builder para encadenamiento
          */
-        public Builder conAutor(Optional<String> autor) {
+        public BuilderModel conAutor(Optional<String> autor) {
             autor.ifPresent(a -> this.autor = a);
             return this;
         }
@@ -94,7 +94,7 @@ public class ArtCientificoModel {
          * @param palabrasClaves lista de palabras clave (encapsulada en Optional)
          * @return el builder para encadenamiento
          */
-        public Builder conPalabrasClaves(Optional<List<String>> palabrasClaves) {
+        public BuilderModel conPalabrasClaves(Optional<List<String>> palabrasClaves) {
             palabrasClaves.ifPresent(lista -> this.palabrasClaves = new ArrayList<>(lista));
             return this;
         }
@@ -104,7 +104,7 @@ public class ArtCientificoModel {
          * @param anio el año (encapsulado en Optional)
          * @return el builder para encadenamiento
          */
-        public Builder conAnio(Optional<Integer> anio) {
+        public BuilderModel conAnio(Optional<Integer> anio) {
             anio.ifPresent(a -> this.anio = a);
             return this;
         }
@@ -114,7 +114,7 @@ public class ArtCientificoModel {
          * @param resumen el resumen (encapsulado en Optional)
          * @return el builder para encadenamiento
          */
-        public Builder conResumen(Optional<String> resumen) {
+        public BuilderModel conResumen(Optional<String> resumen) {
             resumen.ifPresent(r -> this.resumen = r);
             return this;
         }

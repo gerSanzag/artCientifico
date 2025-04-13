@@ -1,116 +1,152 @@
 package dto;
 
+import java.util.Optional;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Optional;
 
 /**
- * DTO (Data Transfer Object) para transportar datos de artículos científicos
- * entre las capas de la aplicación
+ * Clase DTO (Data Transfer Object) para artículos científicos
  */
 public class ArtCientificoDTO {
     
-    private final String nombre;
-    private final String autor;
-    private List<String> palabrasClaves;
-    private final Integer anio;
-    private String resumen;
+    private final Optional<String> nombre;
+    private final Optional<String> autor;
+    private final Optional<List<String>> palabrasClaves;
+    private final Optional<Integer> anio;
+    private final Optional<String> resumen;
     
     /**
-     * Constructor para crear un DTO con los campos obligatorios
-     * @param nombre nombre del artículo (puede ser null)
-     * @param autor autor del artículo (puede ser null)
-     * @param anio año de publicación (puede ser null)
+     * Constructor privado para ArtCientificoDTO (usado por el BuilderDTO)
      */
-    public ArtCientificoDTO(String nombre, String autor, Integer anio) {
-        this.nombre = nombre;
-        this.autor = autor;
-        this.palabrasClaves = new ArrayList<>();
-        this.anio = anio;
-        this.resumen = null;
+    private ArtCientificoDTO(BuilderDTO builder) {
+        this.nombre = builder.nombre;
+        this.autor = builder.autor;
+        this.palabrasClaves = builder.palabrasClaves;
+        this.anio = builder.anio;
+        this.resumen = builder.resumen;
     }
     
-    public String getNombre() {
+    /**
+     * Obtiene el nombre del artículo científico
+     * @return Optional que contiene el nombre o vacío si no existe
+     */
+    public Optional<String> getNombre() {
         return nombre;
     }
     
-    public String getAutor() {
+    /**
+     * Obtiene el autor del artículo científico
+     * @return Optional que contiene el autor o vacío si no existe
+     */
+    public Optional<String> getAutor() {
         return autor;
     }
     
-    public List<String> getPalabrasClaves() {
-        return new ArrayList<>(palabrasClaves);
+    /**
+     * Obtiene las palabras clave del artículo científico
+     * @return Optional que contiene la lista de palabras clave o vacío si no existe
+     */
+    public Optional<List<String>> getPalabrasClaves() {
+        return palabrasClaves.map(lista -> new ArrayList<>(lista));
     }
     
     /**
-     * Establece la lista de palabras clave
-     * @param palabrasClaves lista de palabras clave (encapsulada en Optional)
+     * Obtiene el año de publicación del artículo científico
+     * @return Optional que contiene el año o vacío si no existe
      */
-    public void setPalabrasClaves(Optional<List<String>> palabrasClaves) {
-        this.palabrasClaves = palabrasClaves
-            .map(ArrayList::new)
-            .orElseGet(ArrayList::new);
-    }
-    
-    /**
-     * Método alternativo que acepta directamente la lista de palabras clave
-     * @param palabrasClaves lista de palabras clave
-     */
-    public void setPalabrasClaves(List<String> palabrasClaves) {
-        setPalabrasClaves(Optional.ofNullable(palabrasClaves));
-    }
-    
-    /**
-     * Añade una palabra clave
-     * @param palabraClave palabra clave (encapsulada en Optional)
-     */
-    public void addPalabraClave(Optional<String> palabraClave) {
-        if (this.palabrasClaves == null) {
-            this.palabrasClaves = new ArrayList<>();
-        }
-        palabraClave.ifPresent(this.palabrasClaves::add);
-    }
-    
-    /**
-     * Método alternativo que acepta directamente la palabra clave
-     * @param palabraClave palabra clave
-     */
-    public void addPalabraClave(String palabraClave) {
-        addPalabraClave(Optional.ofNullable(palabraClave));
-    }
-    
-    public Integer getAnio() {
+    public Optional<Integer> getAnio() {
         return anio;
     }
     
-    public String getResumen() {
+    /**
+     * Obtiene el resumen del artículo científico
+     * @return Optional que contiene el resumen o vacío si no existe
+     */
+    public Optional<String> getResumen() {
         return resumen;
-    }
-    
-    /**
-     * Establece el resumen
-     * @param resumen resumen (encapsulado en Optional)
-     */
-    public void setResumen(Optional<String> resumen) {
-        this.resumen = resumen.orElse(null);
-    }
-    
-    /**
-     * Método alternativo que acepta directamente el resumen
-     * @param resumen resumen
-     */
-    public void setResumen(String resumen) {
-        setResumen(Optional.ofNullable(resumen));
     }
     
     @Override
     public String toString() {
         return "ArtCientificoDTO{" +
-                "nombre='" + nombre + '\'' +
-                ", autor='" + autor + '\'' +
+                "nombre=" + nombre +
+                ", autor=" + autor +
                 ", palabrasClaves=" + palabrasClaves +
                 ", anio=" + anio +
-                ", resumen='" + resumen + '\'' +
+                ", resumen=" + resumen +
                 '}';
+    }
+    
+    /**
+     * BuilderDTO para crear instancias de ArtCientificoDTO
+     */
+    public static class BuilderDTO {
+        private Optional<String> nombre = Optional.empty();
+        private Optional<String> autor = Optional.empty();
+        private Optional<List<String>> palabrasClaves = Optional.empty();
+        private Optional<Integer> anio = Optional.empty();
+        private Optional<String> resumen = Optional.empty();
+        
+        public BuilderDTO() {
+        }
+        
+        /**
+         * Establece el nombre del artículo científico
+         * @param nombre el nombre del artículo
+         * @return el builder para encadenamiento
+         */
+        public BuilderDTO conNombre(String nombre) {
+            this.nombre = Optional.ofNullable(nombre);
+            return this;
+        }
+        
+        /**
+         * Establece el autor del artículo científico
+         * @param autor el autor del artículo
+         * @return el builder para encadenamiento
+         */
+        public BuilderDTO conAutor(String autor) {
+            this.autor = Optional.ofNullable(autor);
+            return this;
+        }
+        
+        /**
+         * Establece la lista de palabras clave del artículo científico
+         * @param palabrasClaves lista de palabras clave
+         * @return el builder para encadenamiento
+         */
+        public BuilderDTO conPalabrasClaves(List<String> palabrasClaves) {
+            this.palabrasClaves = Optional.ofNullable(palabrasClaves)
+                                         .map(lista -> new ArrayList<>(lista));
+            return this;
+        }
+        
+        /**
+         * Establece el año del artículo científico
+         * @param anio el año
+         * @return el builder para encadenamiento
+         */
+        public BuilderDTO conAnio(Integer anio) {
+            this.anio = Optional.ofNullable(anio);
+            return this;
+        }
+        
+        /**
+         * Establece el resumen del artículo científico
+         * @param resumen el resumen
+         * @return el builder para encadenamiento
+         */
+        public BuilderDTO conResumen(String resumen) {
+            this.resumen = Optional.ofNullable(resumen);
+            return this;
+        }
+        
+        /**
+         * Construye y devuelve una instancia de ArtCientificoDTO
+         * @return la instancia de ArtCientificoDTO construida
+         */
+        public ArtCientificoDTO build() {
+            return new ArtCientificoDTO(this);
+        }
     }
 } 
