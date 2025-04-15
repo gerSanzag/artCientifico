@@ -9,6 +9,7 @@ import java.util.ArrayList;
  */
 public class ArtCientificoDTO {
     
+    private final Optional<Long> id;
     private final Optional<String> nombre;
     private final Optional<String> autor;
     private final Optional<List<String>> palabrasClaves;
@@ -19,11 +20,20 @@ public class ArtCientificoDTO {
      * Constructor privado para ArtCientificoDTO (usado por el BuilderDTO)
      */
     private ArtCientificoDTO(BuilderDTO builder) {
+        this.id = builder.id;
         this.nombre = builder.nombre;
         this.autor = builder.autor;
         this.palabrasClaves = builder.palabrasClaves;
         this.anio = builder.anio;
         this.resumen = builder.resumen;
+    }
+    
+    /**
+     * Obtiene el ID del artículo científico
+     * @return Optional que contiene el ID o vacío si no existe
+     */
+    public Optional<Long> getId() {
+        return id;
     }
     
     /**
@@ -69,7 +79,8 @@ public class ArtCientificoDTO {
     @Override
     public String toString() {
         return "ArtCientificoDTO{" +
-                "nombre=" + nombre +
+                "id=" + id +
+                ", nombre=" + nombre +
                 ", autor=" + autor +
                 ", palabrasClaves=" + palabrasClaves +
                 ", anio=" + anio +
@@ -81,6 +92,7 @@ public class ArtCientificoDTO {
      * BuilderDTO para crear instancias de ArtCientificoDTO
      */
     public static class BuilderDTO {
+        private Optional<Long> id = Optional.empty();
         private Optional<String> nombre = Optional.empty();
         private Optional<String> autor = Optional.empty();
         private Optional<List<String>> palabrasClaves = Optional.empty();
@@ -88,6 +100,16 @@ public class ArtCientificoDTO {
         private Optional<String> resumen = Optional.empty();
         
         public BuilderDTO() {
+        }
+        
+        /**
+         * Establece el ID del artículo científico
+         * @param id el ID del artículo
+         * @return el builder para encadenamiento
+         */
+        public BuilderDTO conId(Long id) {
+            this.id = Optional.ofNullable(id);
+            return this;
         }
         
         /**

@@ -9,6 +9,7 @@ import java.util.ArrayList;
  */
 public class ArtCientificoModel {
     
+    private final Long id;
     private final String nombre;
     private final String autor;
     private final List<String> palabrasClaves;
@@ -16,11 +17,16 @@ public class ArtCientificoModel {
     private final String resumen;
     
     private ArtCientificoModel(BuilderModel builder) {
+        this.id = builder.id;
         this.nombre = builder.nombre;
         this.autor = builder.autor;
         this.palabrasClaves = builder.palabrasClaves != null ? builder.palabrasClaves : new ArrayList<>();
         this.anio = builder.anio;
         this.resumen = builder.resumen;
+    }
+    
+    public Optional<Long> getId() {
+        return Optional.ofNullable(id);
     }
     
     public Optional<String> getNombre() {
@@ -47,7 +53,8 @@ public class ArtCientificoModel {
     @Override
     public String toString() {
         return "ArtCientificoModel{" +
-                "nombre='" + nombre + '\'' +
+                "id=" + id +
+                ", nombre='" + nombre + '\'' +
                 ", autor='" + autor + '\'' +
                 ", palabrasClaves=" + palabrasClaves +
                 ", anio=" + anio +
@@ -59,6 +66,7 @@ public class ArtCientificoModel {
      * BuilderModel para crear instancias de ArtCientificoModel
      */
     public static class BuilderModel {
+        private Long id;
         private String nombre;
         private String autor;
         private List<String> palabrasClaves;
@@ -67,6 +75,16 @@ public class ArtCientificoModel {
         
         public BuilderModel() {
             this.palabrasClaves = new ArrayList<>();
+        }
+        
+        /**
+         * Establece el ID del artículo científico
+         * @param id el ID del artículo (encapsulado en Optional)
+         * @return el builder para encadenamiento
+         */
+        public BuilderModel conId(Optional<Long> id) {
+            id.ifPresent(i -> this.id = i);
+            return this;
         }
         
         /**

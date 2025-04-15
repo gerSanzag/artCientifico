@@ -23,6 +23,7 @@ public class ArtCientificoMapper {
     public static final Function<Optional<ArtCientificoModel>, Optional<ArtCientificoDTO>> toDTO = 
         modelOpt -> modelOpt.map(model -> 
             new ArtCientificoDTO.BuilderDTO()
+                .conId(model.getId().orElse(null))
                 .conNombre(model.getNombre().orElse(null))
                 .conAutor(model.getAutor().orElse(null))
                 .conPalabrasClaves(model.getPalabrasClaves().orElse(null))
@@ -37,6 +38,7 @@ public class ArtCientificoMapper {
     public static final Function<Optional<ArtCientificoDTO>, Optional<ArtCientificoModel>> toModel = 
         dtoOpt -> dtoOpt.map(dto -> 
             new ArtCientificoModel.BuilderModel()
+                .conId(dto.getId())
                 .conNombre(dto.getNombre())
                 .conAutor(dto.getAutor())
                 .conPalabrasClaves(dto.getPalabrasClaves())
@@ -55,6 +57,7 @@ public class ArtCientificoMapper {
             ArtCientificoDTO.BuilderDTO builder = new ArtCientificoDTO.BuilderDTO();
             
             dtoOpt.ifPresent(dto -> {
+                dto.getId().ifPresent(builder::conId);
                 dto.getNombre().ifPresent(builder::conNombre);
                 dto.getAutor().ifPresent(builder::conAutor);
                 dto.getPalabrasClaves().ifPresent(builder::conPalabrasClaves);
@@ -75,6 +78,7 @@ public class ArtCientificoMapper {
             ArtCientificoModel.BuilderModel builder = new ArtCientificoModel.BuilderModel();
             
             modelOpt.ifPresent(model -> {
+                model.getId().ifPresent(i -> builder.conId(Optional.of(i)));
                 model.getNombre().ifPresent(n -> builder.conNombre(Optional.of(n)));
                 model.getAutor().ifPresent(a -> builder.conAutor(Optional.of(a)));
                 model.getPalabrasClaves().ifPresent(p -> builder.conPalabrasClaves(Optional.of(new ArrayList<>(p))));
