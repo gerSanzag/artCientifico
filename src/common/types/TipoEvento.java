@@ -11,19 +11,14 @@ public enum TipoEvento {
     CREACION,
     
     /**
-     * Representa la modificación de un artículo existente
+     * Representa la actualización de un artículo existente
      */
-    MODIFICACION,
+    ACTUALIZACION,
     
     /**
      * Representa la eliminación de un artículo
      */
     ELIMINACION,
-    
-    /**
-     * Representa la actualización de un artículo existente
-     */
-    ACTUALIZACION,
     
     /**
      * Representa la restauración de un artículo previamente eliminado

@@ -65,174 +65,183 @@ public class ArtCientificoRepositoryImpl implements ArtCientificoRepository {
         historialEventos.add(new EventoHistorialImpl(articulo, tipoEvento));
     }
     
-    @Override
-    public Optional<ArtCientificoDTO> guardar(Optional<ArtCientificoDTO> articuloDTOOpt) {
-        if (articuloDTOOpt.isEmpty()) {
-            return Optional.empty();
-        }
+    /**
+     * Crea un nuevo artículo científico con un ID generado automáticamente
+     * @param articuloDTO el DTO del artículo sin ID
+     * @return el DTO del artículo con ID generado
+     */
+    private Optional<ArtCientificoDTO> crearNuevo(ArtCientificoDTO articuloDTO) {
+        // Generar nuevo ID
+        Long nuevoId = idGenerator.getAndIncrement();
         
-        ArtCientificoDTO articuloDTO = articuloDTOOpt.get();
-        
-        // Si el artículo no tiene ID, le asignamos uno nuevo
-        if (articuloDTO.getId().isEmpty()) {
-            Long nuevoId = idGenerator.getAndIncrement();
-            articuloDTO = new ArtCientificoDTO.BuilderDTO()
-                .conId(nuevoId)
-                .conNombre(articuloDTO.getNombre().orElse(null))
-                .conAutor(articuloDTO.getAutor().orElse(null))
-                .conAnio(articuloDTO.getAnio().orElse(null))
-                .conPalabrasClaves(articuloDTO.getPalabrasClaves().orElse(null))
-                .conResumen(articuloDTO.getResumen().orElse(null))
-                .build();
-        }
-        
-        // Verificar si el ID ya existe
-        Long id = articuloDTO.getId().get();
-        if (articulos.containsKey(id)) {
-            // Si ya existe, no sobreescribimos y devolvemos vacío
-            return Optional.empty();
-        }
-        
-        // Guardar el artículo
-        articulos.put(id, articuloDTO);
-        
-        // Registrar evento de creación
-        registrarEvento(articuloDTO, TipoEvento.CREACION);
-        
-        return Optional.of(articuloDTO);
-    }
-    
-    @Override
-    public List<ArtCientificoDTO> buscarPor(Predicate<ArtCientificoDTO> predicado, boolean soloUno) {
-        return articulos.values().stream()
-                .filter(predicado)
-                .limit(soloUno ? 1 : Long.MAX_VALUE)
-                .collect(Collectors.toList());
-    }
-    
-    @Override
-    public List<ArtCientificoDTO> obtenerTodos() {
-        return new ArrayList<>(articulos.values());
-    }
-    
-    @Override
-    public Optional<ArtCientificoDTO> actualizar(Optional<Long> id, Optional<ArtCientificoDTO> articuloDTOOpt) {
-        if (id.isEmpty() || articuloDTOOpt.isEmpty()) {
-            return Optional.empty();
-        }
-        
-        Long idArticulo = id.get();
-        if (!articulos.containsKey(idArticulo)) {
-            return Optional.empty();
-        }
-        
-        ArtCientificoDTO articuloExistente = articulos.get(idArticulo);
-        ArtCientificoDTO nuevoArticulo = articuloDTOOpt.get();
-        
-        // Crear un nuevo DTO con los datos actualizados pero manteniendo el ID original
-        ArtCientificoDTO articuloActualizado = new ArtCientificoDTO.BuilderDTO()
-            .conId(idArticulo)
-            .conNombre(nuevoArticulo.getNombre().isEmpty() ? 
-                articuloExistente.getNombre().orElse(null) : 
-                nuevoArticulo.getNombre().orElse(null))
-            .conAutor(nuevoArticulo.getAutor().isEmpty() ? 
-                articuloExistente.getAutor().orElse(null) : 
-                nuevoArticulo.getAutor().orElse(null))
-            .conAnio(nuevoArticulo.getAnio().isEmpty() ? 
-                articuloExistente.getAnio().orElse(null) : 
-                nuevoArticulo.getAnio().orElse(null))
-            .conPalabrasClaves(nuevoArticulo.getPalabrasClaves().isEmpty() ? 
-                articuloExistente.getPalabrasClaves().orElse(null) : 
-                nuevoArticulo.getPalabrasClaves().orElse(null))
-            .conResumen(nuevoArticulo.getResumen().isEmpty() ? 
-                articuloExistente.getResumen().orElse(null) : 
-                nuevoArticulo.getResumen().orElse(null))
+        // Crear artículo con el nuevo ID
+        ArtCientificoDTO nuevoArticulo = new ArtCientificoDTO.BuilderDTO()
+            .conId(nuevoId)
+            .conNombre(articuloDTO.getNombre().orElse(null))
+            .conAutor(articuloDTO.getAutor().orElse(null))
+            .conAnio(articuloDTO.getAnio().orElse(null))
+            .conPalabrasClaves(articuloDTO.getPalabrasClaves().orElse(null))
+            .conResumen(articuloDTO.getResumen().orElse(null))
             .build();
         
-        // Registrar evento de actualización con el artículo antes de ser modificado
-        registrarEvento(articuloExistente, TipoEvento.ACTUALIZACION);
+        // Guardar en el repositorio
+        articulos.put(nuevoId, nuevoArticulo);
         
-        // Actualizar el artículo
-        articulos.put(idArticulo, articuloActualizado);
+        // Registrar evento de creación
+        registrarEvento(nuevoArticulo, TipoEvento.CREACION);
         
-        return Optional.of(articuloActualizado);
+        return Optional.of(nuevoArticulo);
+    }
+    
+    @Override
+    public Optional<ArtCientificoDTO> guardar(Optional<ArtCientificoDTO> articuloDTOOpt) {
+        // Procesamos el artículo solo si existe (flatMap)
+        return articuloDTOOpt.flatMap(articuloDTO -> 
+            // Verificamos si tiene un ID y si ese ID ya existe en nuestro repositorio
+            articuloDTO.getId()
+                .filter(articulos::containsKey)
+                // Si tiene ID y existe, actualizamos
+                .map(id -> actualizar(Optional.of(articuloDTO)))
+                // Si no tiene ID o tiene uno que no existe, creamos uno nuevo
+                .orElseGet(() -> crearNuevo(articuloDTO))
+        );
+    }
+    
+    @Override
+    public Optional<List<ArtCientificoDTO>> obtenerTodos() {
+        List<ArtCientificoDTO> todosLosArticulos = new ArrayList<>(articulos.values());
+        return todosLosArticulos.isEmpty() ? Optional.empty() : Optional.of(todosLosArticulos);
+    }
+    
+    @Override
+    public Optional<ArtCientificoDTO> actualizar(Optional<ArtCientificoDTO> articuloDTOOpt) {
+        return articuloDTOOpt.flatMap(articuloDTO -> 
+            articuloDTO.getId().flatMap(id -> 
+                Optional.ofNullable(articulos.get(id))
+                    .map(articuloExistente -> {
+                        // Crear un builder que comienza con los valores existentes
+                        ArtCientificoDTO.BuilderDTO builder = new ArtCientificoDTO.BuilderDTO()
+                            .conId(id);
+                        
+                        // Aplicar los valores del DTO existente
+                        articuloExistente.getNombre().ifPresent(builder::conNombre);
+                        articuloExistente.getAutor().ifPresent(builder::conAutor);
+                        articuloExistente.getAnio().ifPresent(builder::conAnio);
+                        articuloExistente.getPalabrasClaves().ifPresent(builder::conPalabrasClaves);
+                        articuloExistente.getResumen().ifPresent(builder::conResumen);
+                        
+                        // Sobrescribir con valores nuevos si están presentes
+                        articuloDTO.getNombre().ifPresent(builder::conNombre);
+                        articuloDTO.getAutor().ifPresent(builder::conAutor);
+                        articuloDTO.getAnio().ifPresent(builder::conAnio);
+                        articuloDTO.getPalabrasClaves().ifPresent(builder::conPalabrasClaves);
+                        articuloDTO.getResumen().ifPresent(builder::conResumen);
+                        
+                        // Construir el DTO actualizado
+                        ArtCientificoDTO articuloActualizado = builder.build();
+                        
+                        // Registrar evento y actualizar
+                        registrarEvento(articuloExistente, TipoEvento.ACTUALIZACION);
+                        articulos.put(id, articuloActualizado);
+                        
+                        return articuloActualizado;
+                    })
+            )
+        );
     }
     
     @Override
     public Optional<Boolean> eliminar(Optional<Long> id) {
-        if (id.isEmpty()) {
-            return Optional.empty();
-        }
-        
-        Long idArticulo = id.get();
-        ArtCientificoDTO articuloEliminado = articulos.remove(idArticulo);
-        
-        if (articuloEliminado != null) {
-            // Registrar evento de eliminación
-            registrarEvento(articuloEliminado, TipoEvento.ELIMINACION);
-            return Optional.of(true);
-        }
-        
-        return Optional.of(false);
+        // Usar flatMap para trabajar solo si el Optional tiene valor
+        return id.flatMap(idArticulo -> {
+            ArtCientificoDTO articuloEliminado = articulos.remove(idArticulo);
+            
+            return Optional.ofNullable(articuloEliminado)
+                .map(articulo -> {
+                    // Registrar evento de eliminación
+                    registrarEvento(articulo, TipoEvento.ELIMINACION);
+                    return true;
+                })
+                .or(() -> Optional.of(false));
+        });
     }
     
     @Override
-    public Map<ArtCientificoDTO, LocalDateTime> obtenerHistorialEliminados() {
-        return historialEventos.stream()
-            .filter(evento -> evento.getTipoEvento() == TipoEvento.ELIMINACION)
-            .collect(Collectors.toMap(
-                EventoHistorial::getArticulo,
-                EventoHistorial::getFechaEvento,
-                (fecha1, fecha2) -> fecha1.isAfter(fecha2) ? fecha1 : fecha2 // En caso de duplicados, nos quedamos con la fecha más reciente
-            ));
-    }
-    
-    @Override
-    public Optional<ArtCientificoDTO> restaurarArticulo(Long id) {
-        // Buscamos el artículo eliminado más reciente con el ID especificado
-        Optional<EventoHistorialImpl> eventoEliminacion = historialEventos.stream()
-            .filter(evento -> evento.getTipoEvento() == TipoEvento.ELIMINACION)
-            .filter(evento -> evento.getArticulo().getId().isPresent() && evento.getArticulo().getId().get().equals(id))
-            .max((e1, e2) -> e1.getFechaEvento().compareTo(e2.getFechaEvento()));
-        
-        if (eventoEliminacion.isEmpty()) {
-            return Optional.empty();
-        }
-        
-        ArtCientificoDTO articuloEliminado = eventoEliminacion.get().getArticulo();
-        
-        // Verificar si el ID ya existe (conflicto)
-        if (articulos.containsKey(id)) {
-            // No podemos restaurar si el ID ya está en uso
-            return Optional.empty();
-        }
-        
-        // Restaurar el artículo
-        articulos.put(id, articuloEliminado);
-        
-        // Registrar evento de restauración
-        registrarEvento(articuloEliminado, TipoEvento.RESTAURACION);
-        
-        return Optional.of(articuloEliminado);
+    public Optional<ArtCientificoDTO> restaurarArticulo(Optional<Long> idOpt) {
+        // Usar flatMap para trabajar solo si existe el ID
+        return idOpt.flatMap(id -> 
+            // Buscar el evento de eliminación más reciente
+            historialEventos.stream()
+                .filter(evento -> evento.getTipoEvento() == TipoEvento.ELIMINACION)
+                .filter(evento -> evento.getArticulo().getId().isPresent() && 
+                        evento.getArticulo().getId().get().equals(id))
+                .max((e1, e2) -> e1.getFechaEvento().compareTo(e2.getFechaEvento()))
+                .map(eventoEliminacion -> {
+                    ArtCientificoDTO articuloEliminado = eventoEliminacion.getArticulo();
+                    
+                    // Verificar si el ID ya existe y si no existe, restaurar
+                    return Optional.of(!articulos.containsKey(id))
+                        .filter(Boolean::booleanValue)
+                        .map(noExiste -> {
+                            // Restaurar el artículo
+                            articulos.put(id, articuloEliminado);
+                            // Registrar evento de restauración
+                            registrarEvento(articuloEliminado, TipoEvento.RESTAURACION);
+                            return articuloEliminado;
+                        });
+                })
+                .orElse(Optional.empty())
+        );
     }
 
     @Override
-    public List<EventoHistorial> obtenerHistorialEventos() {
-        return new ArrayList<>(historialEventos);
+    public Optional<List<EventoHistorial>> obtenerHistorialEventos() {
+        List<EventoHistorial> eventos = new ArrayList<>(historialEventos);
+        return eventos.isEmpty() ? Optional.empty() : Optional.of(eventos);
     }
 
     @Override
-    public List<EventoHistorial> obtenerHistorialPorTipo(TipoEvento tipoEvento) {
-        return historialEventos.stream()
+    public Optional<List<EventoHistorial>> obtenerHistorialPorTipo(Optional<TipoEvento> tipoEventoOpt) {
+        if (tipoEventoOpt.isEmpty()) {
+            return Optional.empty();
+        }
+        
+        TipoEvento tipoEvento = tipoEventoOpt.get();
+        List<EventoHistorial> eventosFiltrados = historialEventos.stream()
             .filter(evento -> evento.getTipoEvento() == tipoEvento)
             .collect(Collectors.toList());
+            
+        return eventosFiltrados.isEmpty() ? Optional.empty() : Optional.of(eventosFiltrados);
     }
 
     @Override
-    public List<EventoHistorial> obtenerHistorialPorArticulo(Long id) {
-        return historialEventos.stream()
+    public Optional<List<EventoHistorial>> obtenerHistorialPorArticulo(Optional<Long> idOpt) {
+        if (idOpt.isEmpty()) {
+            return Optional.empty();
+        }
+        
+        Long id = idOpt.get();
+        List<EventoHistorial> eventosFiltrados = historialEventos.stream()
             .filter(evento -> evento.getArticulo().getId().isPresent() && 
                    evento.getArticulo().getId().get().equals(id))
             .collect(Collectors.toList());
+            
+        return eventosFiltrados.isEmpty() ? Optional.empty() : Optional.of(eventosFiltrados);
+    }
+
+    @Override
+    public Optional<ArtCientificoDTO> buscarPorId(Optional<Long> idOpt) {
+        return idOpt.flatMap(id -> 
+            Optional.ofNullable(articulos.get(id))
+        );
+    }
+    
+    @Override
+    public Optional<List<ArtCientificoDTO>> buscarPorCriterio(Predicate<ArtCientificoDTO> predicado) {
+        List<ArtCientificoDTO> resultados = articulos.values().stream()
+                .filter(predicado)
+                .collect(Collectors.toList());
+        
+        return resultados.isEmpty() ? Optional.empty() : Optional.of(resultados);
     }
 } 

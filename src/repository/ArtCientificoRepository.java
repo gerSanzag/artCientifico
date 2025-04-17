@@ -1,8 +1,6 @@
 package repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -24,26 +22,31 @@ public interface ArtCientificoRepository {
     Optional<ArtCientificoDTO> guardar(Optional<ArtCientificoDTO> articuloOpt);
     
     /**
+     * Busca un artículo por su ID
+     * @param idOpt el ID del artículo a buscar (encapsulado en Optional)
+     * @return Optional con el DTO del artículo si se encuentra, o vacío si no existe
+     */
+    Optional<ArtCientificoDTO> buscarPorId(Optional<Long> idOpt);
+    
+    /**
      * Busca artículos que cumplan con un predicado específico
      * @param predicado el criterio de búsqueda (función que evalúa cada artículo)
-     * @param soloUno indica si solo se quiere recuperar el primer artículo que cumpla el predicado
-     * @return lista de DTOs de artículos que cumplen con el predicado, o una lista con un solo elemento si soloUno es true
+     * @return Optional con la lista de DTOs de artículos que cumplen con el predicado, o vacío si no hay resultados
      */
-    List<ArtCientificoDTO> buscarPor(Predicate<ArtCientificoDTO> predicado, boolean soloUno);
+    Optional<List<ArtCientificoDTO>> buscarPorCriterio(Predicate<ArtCientificoDTO> predicado);
     
     /**
      * Obtiene todos los artículos científicos
-     * @return lista con los DTOs de todos los artículos
+     * @return Optional con la lista de DTOs de todos los artículos, o vacío si no hay artículos
      */
-    List<ArtCientificoDTO> obtenerTodos();
+    Optional<List<ArtCientificoDTO>> obtenerTodos();
     
     /**
      * Actualiza un artículo existente
-     * @param id el ID del artículo a actualizar
-     * @param articuloActualizadoOpt los nuevos datos del artículo (encapsulado en Optional)
+     * @param articuloActualizadoOpt los datos del artículo a actualizar (encapsulado en Optional)
      * @return Optional con el DTO del artículo actualizado o vacío si no se encontró
      */
-    Optional<ArtCientificoDTO> actualizar(Optional<Long> id, Optional<ArtCientificoDTO> articuloActualizadoOpt);
+    Optional<ArtCientificoDTO> actualizar(Optional<ArtCientificoDTO> articuloActualizadoOpt);
     
     /**
      * Elimina un artículo 
@@ -54,41 +57,28 @@ public interface ArtCientificoRepository {
     
     /**
      * Obtiene el historial completo de eventos
-     * @return lista con todos los eventos registrados (creación, modificación, eliminación)
+     * @return Optional con la lista de todos los eventos registrados o vacío si no hay eventos
      */
-    List<EventoHistorial> obtenerHistorialEventos();
+    Optional<List<EventoHistorial>> obtenerHistorialEventos();
     
     /**
      * Obtiene el historial de eventos de un tipo específico
-     * @param tipoEvento el tipo de evento a filtrar
-     * @return lista con los eventos del tipo especificado
+     * @param tipoEventoOpt el tipo de evento a filtrar (encapsulado en Optional)
+     * @return Optional con la lista de eventos del tipo especificado o vacío si no hay eventos
      */
-    List<EventoHistorial> obtenerHistorialPorTipo(TipoEvento tipoEvento);
+    Optional<List<EventoHistorial>> obtenerHistorialPorTipo(Optional<TipoEvento> tipoEventoOpt);
     
     /**
      * Obtiene el historial de eventos relacionados con un artículo específico
-     * @param id ID del artículo
-     * @return lista con los eventos relacionados con el artículo
+     * @param idOpt ID del artículo (encapsulado en Optional)
+     * @return Optional con la lista de eventos relacionados con el artículo o vacío si no hay eventos
      */
-    List<EventoHistorial> obtenerHistorialPorArticulo(Long id);
-    
-    /**
-     * Obtiene el historial de artículos eliminados (mantenido por compatibilidad)
-     * @return un mapa con los artículos eliminados y su fecha de eliminación
-     * @deprecated Usar obtenerHistorialPorTipo(TipoEvento.ELIMINACION) en su lugar
-     */
-    @Deprecated
-    default Map<ArtCientificoDTO, LocalDateTime> obtenerHistorialEliminados() {
-        // Implementación por defecto para mantener compatibilidad
-        // El método retorna un mapa vacío, la implementación concreta debe sobrescribirlo
-        // si se necesita mantener la funcionalidad original
-        return Map.of();
-    }
+    Optional<List<EventoHistorial>> obtenerHistorialPorArticulo(Optional<Long> idOpt);
     
     /**
      * Restaura un artículo eliminado por su ID
-     * @param id ID del artículo a restaurar
+     * @param idOpt ID del artículo a restaurar (encapsulado en Optional)
      * @return Optional con el artículo restaurado o vacío si no se encontró
      */
-    Optional<ArtCientificoDTO> restaurarArticulo(Long id);
+    Optional<ArtCientificoDTO> restaurarArticulo(Optional<Long> idOpt);
 } 
