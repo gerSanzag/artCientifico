@@ -16,6 +16,5 @@ alwaysApply: true
     - Manejo de optionals siempre para todos los objeto que puedan devolver un null.
     - Usa interfases, Optionals, streams, collectors y todo el enfoque funcional que sea necesario.
     - Tambien crea donde sea necesario interfases he implementación.
-    - Esta prohibido utilizar estructuras if a menos que sea estrictamente necesario.
-    - Siempre que tengamos optionals, trabajaremos con los metodos del optional sin ecepcion.
+    - Siempre que tengamos un optional se deben usar los metodos del optional, no implementar estructuras if a menos que sea estrictamente necesario.
     

@@ -2,25 +2,16 @@ package repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 import dto.ArtCientificoDTO;
 import common.types.TipoEvento;
 
 /**
  * Interfaz para el repositorio de artículos científicos
- * Define operaciones CRUD usando programación funcional
+ * Define operaciones CRUD fundamentales usando programación funcional
  * Trabaja directamente con DTOs para desacoplar la capa de persistencia
  */
 public interface ArtCientificoRepository {
-    
- 
-    /**
-     * Busca un artículo por su ID
-     * @param idOpt el ID del artículo a buscar (encapsulado en Optional)
-     * @return Optional con el DTO del artículo si se encuentra, o vacío si no existe
-     */
-    Optional<ArtCientificoDTO> buscarPorId(Optional<Long> idOpt);
     
     /**
      * Crea un nuevo artículo científico en el repositorio
@@ -30,13 +21,6 @@ public interface ArtCientificoRepository {
     Optional<ArtCientificoDTO> crearNuevo(ArtCientificoDTO articuloDTO);
     
     /**
-     * Busca artículos que cumplan con un predicado específico
-     * @param predicado el criterio de búsqueda (función que evalúa cada artículo)
-     * @return Optional con la lista de DTOs de artículos que cumplen con el predicado, o vacío si no hay resultados
-     */
-    Optional<List<ArtCientificoDTO>> buscarPorCriterio(Predicate<ArtCientificoDTO> predicado);
-    
-    /**
      * Obtiene todos los artículos científicos
      * @return Optional con la lista de DTOs de todos los artículos, o vacío si no hay artículos
      */
@@ -44,17 +28,17 @@ public interface ArtCientificoRepository {
 
     /**
      * Actualiza un artículo existente
-     * @param articuloActualizadoOpt los datos del artículo a actualizar (encapsulado en Optional)
+     * @param articuloActualizado los datos del artículo a actualizar
      * @return Optional con el DTO del artículo actualizado o vacío si no se encontró
      */
-    Optional<ArtCientificoDTO> actualizar(Optional<ArtCientificoDTO> articuloActualizadoOpt);
+    Optional<ArtCientificoDTO> actualizar(ArtCientificoDTO articuloActualizado);
     
     /**
      * Elimina un artículo 
      * @param id el ID del artículo a eliminar
      * @return Optional que indica si se eliminó correctamente o no
      */
-    Optional<Boolean> eliminar(Optional<Long> id);
+    Optional<Boolean> eliminar(Long id);
     
     /**
      * Obtiene el historial completo de eventos
@@ -63,23 +47,9 @@ public interface ArtCientificoRepository {
     Optional<List<EventoHistorial>> obtenerHistorialEventos();
     
     /**
-     * Obtiene el historial de eventos de un tipo específico
-     * @param tipoEventoOpt el tipo de evento a filtrar (encapsulado en Optional)
-     * @return Optional con la lista de eventos del tipo especificado o vacío si no hay eventos
+     * Registra un evento en el historial
+     * @param articuloDTO El artículo relacionado con el evento
+     * @param tipoEvento El tipo de evento a registrar
      */
-    Optional<List<EventoHistorial>> obtenerHistorialPorTipo(Optional<TipoEvento> tipoEventoOpt);
-    
-    /**
-     * Obtiene el historial de eventos relacionados con un artículo específico
-     * @param idOpt ID del artículo (encapsulado en Optional)
-     * @return Optional con la lista de eventos relacionados con el artículo o vacío si no hay eventos
-     */
-    Optional<List<EventoHistorial>> obtenerHistorialPorArticulo(Optional<Long> idOpt);
-    
-    /**
-     * Restaura un artículo eliminado por su ID
-     * @param idOpt ID del artículo a restaurar (encapsulado en Optional)
-     * @return Optional con el artículo restaurado o vacío si no se encontró
-     */
-    Optional<ArtCientificoDTO> restaurarArticulo(Optional<Long> idOpt);
+    void registrarEvento(ArtCientificoDTO articuloDTO, TipoEvento tipoEvento);
 } 
