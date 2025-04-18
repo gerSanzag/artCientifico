@@ -104,35 +104,37 @@ public class ArtCientificoRepositoryImpl implements ArtCientificoRepository {
     @Override
     public Optional<ArtCientificoDTO> actualizar(ArtCientificoDTO articuloDTO) {
         return articuloDTO.getId()
-            .flatMap(id -> Optional.ofNullable(articulos.get(id))
-                .map(articuloExistente -> {
-                    // Combinar el artículo existente con las actualizaciones
-                    ArtCientificoDTO articuloActualizado = fusionarArticulos(articuloExistente, articuloDTO);
-                    
-                    // Registrar evento y actualizar
-                    registrarEvento(articuloExistente, TipoEvento.ACTUALIZACION);
-                    articulos.put(id, articuloActualizado);
-                    
-                    return articuloActualizado;
-                })
-            );
-    }
-    
-    /**
-     * Fusiona dos artículos, tomando los valores del segundo cuando están presentes
-     * @param base el artículo base
-     * @param actualizaciones las actualizaciones a aplicar
-     * @return un nuevo artículo con los valores combinados
-     */
-    private ArtCientificoDTO fusionarArticulos(ArtCientificoDTO base, ArtCientificoDTO actualizaciones) {
-        return new ArtCientificoDTO.BuilderDTO()
-            .conId(base.getId().orElse(null))
-            .conNombre(actualizaciones.getNombre().orElseGet(() -> base.getNombre().orElse(null)))
-            .conAutor(actualizaciones.getAutor().orElseGet(() -> base.getAutor().orElse(null)))
-            .conAnio(actualizaciones.getAnio().orElseGet(() -> base.getAnio().orElse(null)))
-            .conPalabrasClaves(actualizaciones.getPalabrasClaves().orElseGet(() -> base.getPalabrasClaves().orElse(null)))
-            .conResumen(actualizaciones.getResumen().orElseGet(() -> base.getResumen().orElse(null)))
-            .build();
+            .flatMap(id -> {
+                // Definimos la función de fusión localmente
+                java.util.function.BiFunction<ArtCientificoDTO, ArtCientificoDTO, ArtCientificoDTO> fusionarArticulos = 
+                    (base, actualizaciones) -> {
+                        return new ArtCientificoDTO.BuilderDTO()
+                            .conId(base.getId().orElse(null))
+                            .conNombre(actualizaciones.getNombre().isPresent() ? 
+                                      actualizaciones.getNombre().get() : base.getNombre().orElse(null))
+                            .conAutor(actualizaciones.getAutor().isPresent() ? 
+                                     actualizaciones.getAutor().get() : base.getAutor().orElse(null))
+                            .conAnio(actualizaciones.getAnio().isPresent() ? 
+                                    actualizaciones.getAnio().get() : base.getAnio().orElse(null))
+                            .conPalabrasClaves(actualizaciones.getPalabrasClaves().isPresent() ? 
+                                              actualizaciones.getPalabrasClaves().get() : base.getPalabrasClaves().orElse(null))
+                            .conResumen(actualizaciones.getResumen().isPresent() ? 
+                                       actualizaciones.getResumen().get() : base.getResumen().orElse(null))
+                            .build();
+                    };
+                
+                return Optional.ofNullable(articulos.get(id))
+                    .map(articuloExistente -> {
+                        // Combinar el artículo existente con las actualizaciones
+                        ArtCientificoDTO articuloActualizado = fusionarArticulos.apply(articuloExistente, articuloDTO);
+                        
+                        // Registrar evento y actualizar
+                        registrarEvento(articuloExistente, TipoEvento.ACTUALIZACION);
+                        articulos.put(id, articuloActualizado);
+                        
+                        return articuloActualizado;
+                    });
+            });
     }
     
     @Override
