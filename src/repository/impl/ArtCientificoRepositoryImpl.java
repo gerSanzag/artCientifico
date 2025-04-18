@@ -70,7 +70,8 @@ public class ArtCientificoRepositoryImpl implements ArtCientificoRepository {
      * @param articuloDTO el DTO del artículo sin ID
      * @return el DTO del artículo con ID generado
      */
-    private Optional<ArtCientificoDTO> crearNuevo(ArtCientificoDTO articuloDTO) {
+    @Override
+    public Optional<ArtCientificoDTO> crearNuevo(ArtCientificoDTO articuloDTO) {
         // Generar nuevo ID
         Long nuevoId = idGenerator.getAndIncrement();
         
@@ -93,19 +94,7 @@ public class ArtCientificoRepositoryImpl implements ArtCientificoRepository {
         return Optional.of(nuevoArticulo);
     }
     
-    @Override
-    public Optional<ArtCientificoDTO> guardar(Optional<ArtCientificoDTO> articuloDTOOpt) {
-        // Procesamos el artículo solo si existe (flatMap)
-        return articuloDTOOpt.flatMap(articuloDTO -> 
-            // Verificamos si tiene un ID y si ese ID ya existe en nuestro repositorio
-            articuloDTO.getId()
-                .filter(articulos::containsKey)
-                // Si tiene ID y existe, actualizamos
-                .map(id -> actualizar(Optional.of(articuloDTO)))
-                // Si no tiene ID o tiene uno que no existe, creamos uno nuevo
-                .orElseGet(() -> crearNuevo(articuloDTO))
-        );
-    }
+  
     
     @Override
     public Optional<List<ArtCientificoDTO>> obtenerTodos() {
@@ -119,26 +108,8 @@ public class ArtCientificoRepositoryImpl implements ArtCientificoRepository {
             articuloDTO.getId().flatMap(id -> 
                 Optional.ofNullable(articulos.get(id))
                     .map(articuloExistente -> {
-                        // Crear un builder que comienza con los valores existentes
-                        ArtCientificoDTO.BuilderDTO builder = new ArtCientificoDTO.BuilderDTO()
-                            .conId(id);
-                        
-                        // Aplicar los valores del DTO existente
-                        articuloExistente.getNombre().ifPresent(builder::conNombre);
-                        articuloExistente.getAutor().ifPresent(builder::conAutor);
-                        articuloExistente.getAnio().ifPresent(builder::conAnio);
-                        articuloExistente.getPalabrasClaves().ifPresent(builder::conPalabrasClaves);
-                        articuloExistente.getResumen().ifPresent(builder::conResumen);
-                        
-                        // Sobrescribir con valores nuevos si están presentes
-                        articuloDTO.getNombre().ifPresent(builder::conNombre);
-                        articuloDTO.getAutor().ifPresent(builder::conAutor);
-                        articuloDTO.getAnio().ifPresent(builder::conAnio);
-                        articuloDTO.getPalabrasClaves().ifPresent(builder::conPalabrasClaves);
-                        articuloDTO.getResumen().ifPresent(builder::conResumen);
-                        
-                        // Construir el DTO actualizado
-                        ArtCientificoDTO articuloActualizado = builder.build();
+                        // Combinar el artículo existente con las actualizaciones
+                        ArtCientificoDTO articuloActualizado = fusionarArticulos(articuloExistente, articuloDTO);
                         
                         // Registrar evento y actualizar
                         registrarEvento(articuloExistente, TipoEvento.ACTUALIZACION);
@@ -148,6 +119,23 @@ public class ArtCientificoRepositoryImpl implements ArtCientificoRepository {
                     })
             )
         );
+    }
+    
+    /**
+     * Fusiona dos artículos, tomando los valores del segundo cuando están presentes
+     * @param base el artículo base
+     * @param actualizaciones las actualizaciones a aplicar
+     * @return un nuevo artículo con los valores combinados
+     */
+    private ArtCientificoDTO fusionarArticulos(ArtCientificoDTO base, ArtCientificoDTO actualizaciones) {
+        return new ArtCientificoDTO.BuilderDTO()
+            .conId(base.getId().orElse(null))
+            .conNombre(actualizaciones.getNombre().orElseGet(() -> base.getNombre().orElse(null)))
+            .conAutor(actualizaciones.getAutor().orElseGet(() -> base.getAutor().orElse(null)))
+            .conAnio(actualizaciones.getAnio().orElseGet(() -> base.getAnio().orElse(null)))
+            .conPalabrasClaves(actualizaciones.getPalabrasClaves().orElseGet(() -> base.getPalabrasClaves().orElse(null)))
+            .conResumen(actualizaciones.getResumen().orElseGet(() -> base.getResumen().orElse(null)))
+            .build();
     }
     
     @Override
