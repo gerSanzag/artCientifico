@@ -1,7 +1,7 @@
-import controller.ArtCientificoController;
 import view.ArtCientificoView;
-import service.ArtCientificoServiceFactory;
-import service.ArtCientificoService;
+import view.io.EntradaSalidaIO;
+import view.io.EntradaSalidaFactory;
+import java.util.Scanner;
 
 /**
  * Clase principal de la aplicación
@@ -15,16 +15,31 @@ public class App {
     public static void main(String[] args) {
         System.out.println("Iniciando Sistema de Gestión de Artículos Científicos...");
         
-        // Obtener el servicio a través de su factory
-        ArtCientificoService servicio = ArtCientificoServiceFactory.getServicio();
+        // Crear el scanner para la entrada de datos
+        Scanner scanner = new Scanner(System.in);
         
-        // Crear la vista
-        ArtCientificoView vista = new ArtCientificoView();
+        // Crear la interfaz de entrada/salida
+        EntradaSalidaIO io = EntradaSalidaFactory.crearEntradaSalida(scanner);
         
-        // Crear el controlador con la vista y el servicio
-        ArtCientificoController controlador = new ArtCientificoController(vista, servicio);
+        // Crear la vista con la interfaz de entrada/salida
+        ArtCientificoView vista = new ArtCientificoView(io);
         
-        // Iniciar la aplicación
-        controlador.iniciar();
+        try {
+            // Ejemplo de uso de la vista
+            vista.mostrarMenuPrincipal();
+            vista.leerOpcion().ifPresentOrElse(
+                opcion -> vista.mostrarExito("Has seleccionado la opción: " + opcion),
+                () -> vista.mostrarError("Opción no válida")
+            );
+            
+            if (vista.confirmar("¿Deseas continuar?")) {
+                vista.mostrarExito("Confirmado");
+            } else {
+                vista.mostrarError("Operación cancelada");
+            }
+        } finally {
+            // Cerrar el scanner al finalizar
+            scanner.close();
+        }
     }
 } 

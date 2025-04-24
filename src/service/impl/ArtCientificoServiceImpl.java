@@ -50,7 +50,7 @@ public class ArtCientificoServiceImpl implements ArtCientificoService {
         return idOpt.flatMap(id -> 
             repositorio.obtenerTodos()
                 .flatMap(articulos -> articulos.stream()
-                    .filter(art -> art.getId().isPresent() && art.getId().get().equals(id))
+                    .filter(art -> art.getId().map(artId -> artId.equals(id)).orElse(false))
                     .findFirst()));
     }
     
