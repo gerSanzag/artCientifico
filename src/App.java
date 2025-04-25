@@ -25,17 +25,18 @@ public class App {
         ArtCientificoView vista = new ArtCientificoView(io);
         
         try {
-            // Ejemplo de uso de la vista
-            vista.mostrarMenuPrincipal();
-            vista.leerOpcion().ifPresentOrElse(
-                opcion -> vista.mostrarExito("Has seleccionado la opción: " + opcion),
-                () -> vista.mostrarError("Opción no válida")
+            // Ejemplo de uso de la vista con interfaces funcionales
+            vista.mostrarMenuPrincipal.run();
+            
+            vista.leerOpcion.get().ifPresentOrElse(
+                opcion -> vista.mostrarExito.accept("Has seleccionado la opción: " + opcion),
+                () -> vista.mostrarError.accept("Opción no válida")
             );
             
-            if (vista.confirmar("¿Deseas continuar?")) {
-                vista.mostrarExito("Confirmado");
+            if (vista.confirmar.apply("¿Deseas continuar?")) {
+                vista.mostrarExito.accept("Confirmado");
             } else {
-                vista.mostrarError("Operación cancelada");
+                vista.mostrarError.accept("Operación cancelada");
             }
         } finally {
             // Cerrar el scanner al finalizar
