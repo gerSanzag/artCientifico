@@ -1,7 +1,5 @@
-import view.ArtCientificoView;
-import view.io.EntradaSalidaIO;
-import view.io.EntradaSalidaFactory;
-import java.util.Scanner;
+import controller.ArtCientificoController;
+import controller.ArtCientificoControllerFactory;
 
 /**
  * Clase principal de la aplicación
@@ -15,32 +13,15 @@ public class App {
     public static void main(String[] args) {
         System.out.println("Iniciando Sistema de Gestión de Artículos Científicos...");
         
-        // Crear el scanner para la entrada de datos
-        Scanner scanner = new Scanner(System.in);
-        
-        // Crear la interfaz de entrada/salida
-        EntradaSalidaIO io = EntradaSalidaFactory.crearEntradaSalida(scanner);
-        
-        // Crear la vista con la interfaz de entrada/salida
-        ArtCientificoView vista = new ArtCientificoView(io);
-        
         try {
-            // Ejemplo de uso de la vista con interfaces funcionales
-            vista.mostrarMenuPrincipal.run();
+            // Crear el controlador utilizando la fábrica
+            ArtCientificoController controlador = ArtCientificoControllerFactory.crearControlador();
             
-            vista.leerOpcion.get().ifPresentOrElse(
-                opcion -> vista.mostrarExito.accept("Has seleccionado la opción: " + opcion),
-                () -> vista.mostrarError.accept("Opción no válida")
-            );
-            
-            if (vista.confirmar.apply("¿Deseas continuar?")) {
-                vista.mostrarExito.accept("Confirmado");
-            } else {
-                vista.mostrarError.accept("Operación cancelada");
-            }
-        } finally {
-            // Cerrar el scanner al finalizar
-            scanner.close();
+            // Iniciar la aplicación
+            controlador.iniciarAplicacion.run();
+        } catch (Exception e) {
+            System.err.println("Error en la aplicación: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 } 

@@ -27,6 +27,7 @@ public class ArtCientificoView {
     public final Supplier<Optional<Long>> solicitarId;
     public final Function<String, Optional<String>> solicitarValor;
     public final Function<String, Boolean> confirmar;
+    public final Consumer<String> mostrarMensaje;
     
     /**
      * Constructor que recibe una implementación de EntradaSalidaIO
@@ -36,6 +37,11 @@ public class ArtCientificoView {
         this.io = io;
         
         // Inicializo las interfaces funcionales
+        
+        /**
+         * Consumer básico para mostrar mensajes
+         */
+        this.mostrarMensaje = io::mostrarMensaje;
         
         /**
          * Runnable que muestra el menú principal
