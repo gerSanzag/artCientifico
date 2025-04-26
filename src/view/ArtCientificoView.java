@@ -123,6 +123,12 @@ public class ArtCientificoView {
                             articulo.getNombre().ifPresent(nombre -> io.mostrarMensaje("Nombre: " + nombre));
                             articulo.getAutor().ifPresent(autor -> io.mostrarMensaje("Autor: " + autor));
                             articulo.getAnio().ifPresent(anio -> io.mostrarMensaje("Año: " + anio));
+                            articulo.getPalabrasClaves().ifPresent(palabras -> 
+                                io.mostrarMensaje("Palabras clave: " + String.join(", ", palabras))
+                            );
+                            articulo.getResumen().ifPresent(resumen -> 
+                                io.mostrarMensaje("Resumen: " + resumen)
+                            );
                         });
                     }
                 },
@@ -161,5 +167,61 @@ public class ArtCientificoView {
                     .map(respuesta -> respuesta.equalsIgnoreCase("S"))
                     .orElse(false);
         };
+    }
+
+    // --- Nuevos métodos para solicitar entradas numéricas validadas ---
+
+    /**
+     * Solicita al usuario un ID y asegura que sea un número Long válido.
+     * Repite la solicitud hasta obtener una entrada válida.
+     * @return el ID Long válido ingresado por el usuario.
+     */
+    public Long solicitarIdValido() {
+        while (true) { // Bucle hasta obtener entrada válida
+            io.mostrarMensaje("Ingrese el ID del artículo: ");
+            Optional<String> inputOpt = io.leerEntrada();
+            
+            if (inputOpt.isPresent()) {
+                String input = inputOpt.get();
+                try {
+                    return Long.parseLong(input); // Intentar convertir a Long
+                } catch (NumberFormatException e) {
+                    mostrarError.accept("Entrada inválida. Por favor, ingrese un número válido para el ID.");
+                    // El bucle continuará
+                }
+            } else {
+                // Esto podría pasar si leerEntrada tiene un problema, aunque es raro con System.in
+                mostrarError.accept("No se pudo leer la entrada.");
+            }
+        }
+    }
+
+    /**
+     * Solicita al usuario un año opcional y asegura que sea un número Integer válido o esté vacío.
+     * Repite la solicitud hasta obtener una entrada válida o vacía.
+     * @param mensaje El mensaje a mostrar al usuario para solicitar el año opcional.
+     * @return un Optional<Integer> que contiene el año si se ingresó un número válido, 
+     *         o un Optional vacío si el usuario dejó la entrada en blanco.
+     */
+    public Optional<Integer> solicitarAnioValidoOpcional(String mensaje) {
+        while (true) { // Bucle hasta obtener entrada válida
+            io.mostrarMensaje(mensaje);
+            Optional<String> inputOpt = io.leerEntrada();
+
+            if (inputOpt.isPresent()) {
+                String input = inputOpt.get().trim(); // Quitar espacios
+                if (input.isEmpty()) {
+                    return Optional.empty(); // El usuario decidió omitir, es válido
+                }
+                try {
+                    return Optional.of(Integer.parseInt(input)); // Intentar convertir a Integer
+                } catch (NumberFormatException e) {
+                    mostrarError.accept("Entrada inválida. Por favor, ingrese un número válido para el año o déjelo en blanco.");
+                    // El bucle continuará
+                }
+            } else {
+                mostrarError.accept("No se pudo leer la entrada.");
+            }
+        }
     }
 } 

@@ -66,14 +66,7 @@ public class ArtCientificoController {
         // Recopilar datos del artículo
         Optional<String> nombre = vista.solicitarValor.apply("Ingrese el nombre del artículo: ");
         Optional<String> autor = vista.solicitarValor.apply("Ingrese el autor del artículo: ");
-        Optional<Integer> anio = vista.solicitarValor.apply("Ingrese el año de publicación: ")
-            .flatMap(input -> {
-                try {
-                    return Optional.of(Integer.parseInt(input));
-                } catch (NumberFormatException e) {
-                    return Optional.empty();
-                }
-            });
+        Optional<Integer> anioOpt = vista.solicitarAnioValidoOpcional("Ingrese el año de publicación (opcional): ");
         
         Optional<String> palabrasInput = vista.solicitarValor.apply("Ingrese palabras clave (separadas por comas): ");
         Optional<List<String>> palabrasClaves = palabrasInput.map(input -> 
@@ -89,7 +82,7 @@ public class ArtCientificoController {
         ArtCientificoDTO.BuilderDTO builder = new ArtCientificoDTO.BuilderDTO();
         nombre.ifPresent(builder::conNombre);
         autor.ifPresent(builder::conAutor);
-        anio.ifPresent(builder::conAnio);
+        anioOpt.ifPresent(builder::conAnio);
         palabrasClaves.ifPresent(builder::conPalabrasClaves);
         resumen.ifPresent(builder::conResumen);
         
@@ -111,9 +104,9 @@ public class ArtCientificoController {
      */
     private void ejecutarBuscarArticuloPorId() {
         vista.mostrarMensaje.accept("\n=== BUSCAR ARTÍCULO POR ID ===");
-        Optional<Long> id = vista.solicitarId.get();
+        Long id = vista.solicitarIdValido();
         
-        servicio.buscarPorId(id)
+        servicio.buscarPorId(Optional.of(id))
             .ifPresentOrElse(
                 articulo -> vista.mostrarArticulo.accept(Optional.of(articulo)),
                 () -> vista.mostrarError.accept("No se encontró un artículo con el ID proporcionado")
@@ -134,10 +127,10 @@ public class ArtCientificoController {
      */
     private void ejecutarActualizarArticulo() {
         vista.mostrarMensaje.accept("\n=== ACTUALIZAR ARTÍCULO ===");
-        Optional<Long> id = vista.solicitarId.get();
+        Long id = vista.solicitarIdValido();
         
         // Buscar el artículo existente
-        servicio.buscarPorId(id).ifPresentOrElse(
+        servicio.buscarPorId(Optional.of(id)).ifPresentOrElse(
             articuloExistente -> {
                 vista.mostrarArticulo.accept(Optional.of(articuloExistente));
                 
@@ -145,15 +138,7 @@ public class ArtCientificoController {
                     // Recopilar nuevos datos
                     Optional<String> nombre = vista.solicitarValor.apply("Nuevo nombre (deje en blanco para mantener el actual): ");
                     Optional<String> autor = vista.solicitarValor.apply("Nuevo autor (deje en blanco para mantener el actual): ");
-                    Optional<Integer> anio = vista.solicitarValor.apply("Nuevo año (deje en blanco para mantener el actual): ")
-                        .flatMap(input -> {
-                            if (input.isEmpty()) return Optional.empty();
-                            try {
-                                return Optional.of(Integer.parseInt(input));
-                            } catch (NumberFormatException e) {
-                                return Optional.empty();
-                            }
-                        });
+                    Optional<Integer> anioOpt = vista.solicitarAnioValidoOpcional("Nuevo año (deje en blanco para mantener el actual): ");
                     
                     Optional<String> palabrasInput = vista.solicitarValor.apply("Nuevas palabras clave separadas por comas (deje en blanco para mantener las actuales): ");
                     Optional<List<String>> palabrasClaves = palabrasInput
@@ -188,7 +173,7 @@ public class ArtCientificoController {
                          );
                     
                     // Actualizar o mantener el año
-                    anio.ifPresentOrElse(
+                    anioOpt.ifPresentOrElse(
                         builder::conAnio,
                         () -> articuloExistente.getAnio().ifPresent(builder::conAnio)
                     );
@@ -228,11 +213,10 @@ public class ArtCientificoController {
      */
     private void ejecutarEliminarArticulo() {
         vista.mostrarMensaje.accept("\n=== ELIMINAR ARTÍCULO ===");
-        Optional<Long> idOpt = vista.solicitarId.get();
+        Long id = vista.solicitarIdValido();
 
         // Encadenar operaciones usando Optional
-        idOpt.ifPresentOrElse(id -> {
-            servicio.buscarPorId(Optional.of(id)).ifPresentOrElse(
+        servicio.buscarPorId(Optional.of(id)).ifPresentOrElse(
                 articulo -> {
                     vista.mostrarArticulo.accept(Optional.of(articulo));
 
@@ -257,7 +241,6 @@ public class ArtCientificoController {
                 },
                 () -> vista.mostrarError.accept("No se encontró un artículo con el ID proporcionado")
             );
-        }, () -> vista.mostrarError.accept("ID no válido o no proporcionado."));
     }
     
     /**
@@ -265,9 +248,9 @@ public class ArtCientificoController {
      */
     private void ejecutarRestaurarArticulo() {
         vista.mostrarMensaje.accept("\n=== RESTAURAR ARTÍCULO ELIMINADO ===");
-        Optional<Long> id = vista.solicitarId.get();
+        Long id = vista.solicitarIdValido();
         
-        servicio.restaurarArticulo(id).ifPresentOrElse(
+        servicio.restaurarArticulo(Optional.of(id)).ifPresentOrElse(
             articulo -> {
                 vista.mostrarExito.accept("Artículo restaurado correctamente");
                 vista.mostrarArticulo.accept(Optional.of(articulo));
@@ -394,11 +377,11 @@ public class ArtCientificoController {
      * Muestra el historial filtrado por artículo
      */
     private void mostrarHistorialPorArticulo() {
-        Optional<Long> id = vista.solicitarId.get();
+        Long id = vista.solicitarIdValido();
         
-        servicio.obtenerHistorialPorArticulo(id).ifPresentOrElse(
+        servicio.obtenerHistorialPorArticulo(Optional.of(id)).ifPresentOrElse(
             this::mostrarEventos,
-            () -> vista.mostrarMensaje.accept("No hay eventos registrados para el artículo con ID " + id.orElse(0L))
+            () -> vista.mostrarMensaje.accept("No hay eventos registrados para el artículo con ID " + id)
         );
     }
     

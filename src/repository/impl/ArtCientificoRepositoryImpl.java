@@ -151,6 +151,22 @@ public class ArtCientificoRepositoryImpl implements ArtCientificoRepository {
     }
     
     @Override
+    public Optional<ArtCientificoDTO> restaurar(ArtCientificoDTO articuloDTO) {
+        return articuloDTO.getId()
+            .map(id -> {
+                // Comprobar si ya existe (por si acaso, aunque el servicio ya lo hace)
+                if (articulos.containsKey(id)) {
+                    return Optional.<ArtCientificoDTO>empty(); // Ya existe, no se puede restaurar sobre sí mismo
+                }
+                // Insertar directamente con el ID proporcionado
+                articulos.put(id, articuloDTO);
+                // No registramos evento aquí, el servicio lo hará después
+                return Optional.of(articuloDTO);
+            })
+            .orElse(Optional.empty()); // Si el DTO no tiene ID, no podemos restaurar
+    }
+    
+    @Override
     public Optional<List<EventoHistorial>> obtenerHistorialEventos() {
         List<EventoHistorial> eventos = new ArrayList<>(historialEventos);
         return eventos.isEmpty() ? Optional.empty() : Optional.of(eventos);

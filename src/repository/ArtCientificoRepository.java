@@ -41,6 +41,13 @@ public interface ArtCientificoRepository {
     Optional<Boolean> eliminar(Long id);
     
     /**
+     * Restaura un artículo previamente eliminado, insertándolo de nuevo con su ID original.
+     * @param articuloDTO El DTO del artículo a restaurar (debe contener el ID original)
+     * @return Un Optional con el DTO del artículo restaurado si la operación fue exitosa, o vacío si no.
+     */
+    Optional<ArtCientificoDTO> restaurar(ArtCientificoDTO articuloDTO);
+    
+    /**
      * Obtiene el historial completo de eventos
      * @return Optional con la lista de todos los eventos registrados o vacío si no hay eventos
      */

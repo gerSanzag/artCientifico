@@ -113,8 +113,8 @@ public class ArtCientificoServiceImpl implements ArtCientificoService {
                             .conResumen(articuloEliminado.getResumen().orElse(null))
                             .build();
                         
-                        // Usar crearNuevo para restaurar el artículo
-                        Optional<ArtCientificoDTO> resultado = repositorio.crearNuevo(articuloRestaurado);
+                        // Usar el nuevo método restaurar del repositorio
+                        Optional<ArtCientificoDTO> resultado = repositorio.restaurar(articuloRestaurado);
                         
                         // Registrar evento de restauración si se restauró correctamente
                         resultado.ifPresent(art -> 
