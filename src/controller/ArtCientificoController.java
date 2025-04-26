@@ -2,9 +2,6 @@ package controller;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -165,7 +162,7 @@ public class ArtCientificoController {
                         
                         // Mantener el mismo ID
                         articuloExistente.getId().ifPresent(builder::conId);
-                        
+                       
                         // Actualizar o mantener el nombre
                         nombre.filter(n -> !n.isEmpty())
                               .ifPresentOrElse(
@@ -221,30 +218,36 @@ public class ArtCientificoController {
          */
         this.eliminarArticulo = () -> {
             vista.mostrarMensaje.accept("\n=== ELIMINAR ARTÍCULO ===");
-            Optional<Long> id = vista.solicitarId.get();
-            
-            // Buscar el artículo existente
-            servicio.buscarPorId(id).ifPresentOrElse(
-                articulo -> {
-                    vista.mostrarArticulo.accept(Optional.of(articulo));
-                    
-                    if (vista.confirmar.apply("¿Está seguro que desea eliminar este artículo?")) {
-                        servicio.eliminar(id).ifPresentOrElse(
-                            resultado -> {
-                                if (resultado) {
-                                    vista.mostrarExito.accept("Artículo eliminado correctamente");
-                                } else {
-                                    vista.mostrarError.accept("No se pudo eliminar el artículo");
-                                }
-                            },
-                            () -> vista.mostrarError.accept("Error durante la eliminación")
-                        );
-                    } else {
-                        vista.mostrarMensaje.accept("Operación cancelada por el usuario");
-                    }
-                },
-                () -> vista.mostrarError.accept("No se encontró un artículo con el ID proporcionado")
-            );
+            Optional<Long> idOpt = vista.solicitarId.get();
+
+            // Encadenar operaciones usando Optional
+            idOpt.ifPresentOrElse(id -> {
+                servicio.buscarPorId(Optional.of(id)).ifPresentOrElse(
+                    articulo -> {
+                        vista.mostrarArticulo.accept(Optional.of(articulo));
+
+                        // Encadenar confirmación y eliminación
+                        Optional.of(articulo)
+                            .filter(art -> vista.confirmar.apply("¿Está seguro que desea eliminar este artículo?"))
+                            .ifPresentOrElse(
+                                artConfirmado -> {
+                                    // Intentar eliminar y mapear resultado a acciones
+                                    servicio.eliminar(Optional.of(id))
+                                        .map(exito -> exito ?
+                                             (Runnable)() -> vista.mostrarExito.accept("Artículo eliminado correctamente")
+                                             : (Runnable)() -> vista.mostrarError.accept("No se pudo eliminar el artículo (fallo lógico)")
+                                        )
+                                        .ifPresentOrElse(
+                                            Runnable::run,
+                                            () -> vista.mostrarError.accept("Error durante la eliminación (servicio devolvió vacío)")
+                                        );
+                                },
+                                () -> vista.mostrarMensaje.accept("Operación cancelada por el usuario")
+                            );
+                    },
+                    () -> vista.mostrarError.accept("No se encontró un artículo con el ID proporcionado")
+                );
+            }, () -> vista.mostrarError.accept("ID no válido o no proporcionado."));
         };
         
         /**
@@ -275,25 +278,20 @@ public class ArtCientificoController {
             vista.mostrarMensaje.accept("3. Filtrar por artículo");
             vista.mostrarMensaje.accept("0. Volver al menú principal");
             
+            // Definir las acciones para cada opción usando un Map
+            java.util.Map<Integer, Runnable> accionesHistorial = new java.util.HashMap<>();
+            accionesHistorial.put(1, this::mostrarTodoHistorial);
+            accionesHistorial.put(2, this::mostrarHistorialPorTipo);
+            accionesHistorial.put(3, this::mostrarHistorialPorArticulo);
+            accionesHistorial.put(0, () -> {}); // Opción 0: No hacer nada, vuelve al menú principal
+
+            // Acción por defecto si la opción no es válida
+            Runnable accionPorDefecto = () -> vista.mostrarError.accept("Opción no válida");
+            
             vista.leerOpcion.get().ifPresentOrElse(
                 opcion -> {
-                    switch (opcion) {
-                        case 1:
-                            mostrarTodoHistorial();
-                            break;
-                        case 2:
-                            mostrarHistorialPorTipo();
-                            break;
-                        case 3:
-                            mostrarHistorialPorArticulo();
-                            break;
-                        case 0:
-                            // Volver al menú principal
-                            break;
-                        default:
-                            vista.mostrarError.accept("Opción no válida");
-                            break;
-                    }
+                    // Obtener la acción del mapa o la acción por defecto, y ejecutarla
+                    accionesHistorial.getOrDefault(opcion, accionPorDefecto).run();
                 },
                 () -> vista.mostrarError.accept("Entrada inválida")
             );
@@ -307,34 +305,22 @@ public class ArtCientificoController {
         this.procesarOpcionMenu = () -> {
             return vista.leerOpcion.get()
                 .map(opcion -> {
-                    switch (opcion) {
-                        case 1:
-                            crearArticulo.run();
-                            return true;
-                        case 2:
-                            buscarArticuloPorId.run();
-                            return true;
-                        case 3:
-                            listarArticulos.run();
-                            return true;
-                        case 4:
-                            actualizarArticulo.run();
-                            return true;
-                        case 5:
-                            eliminarArticulo.run();
-                            return true;
-                        case 6:
-                            restaurarArticulo.run();
-                            return true;
-                        case 7:
-                            mostrarHistorialEventos.run();
-                            return true;
-                        case 0:
-                            return false;
-                        default:
+                    // Usar switch con expresión lambda (operador flecha)
+                    // y 'yield' para devolver valores desde bloques
+                    return switch (opcion) {
+                        case 1 -> { crearArticulo.run(); yield true; }
+                        case 2 -> { buscarArticuloPorId.run(); yield true; }
+                        case 3 -> { listarArticulos.run(); yield true; }
+                        case 4 -> { actualizarArticulo.run(); yield true; }
+                        case 5 -> { eliminarArticulo.run(); yield true; }
+                        case 6 -> { restaurarArticulo.run(); yield true; }
+                        case 7 -> { mostrarHistorialEventos.run(); yield true; }
+                        case 0 -> false; // Devuelve false directamente
+                        default -> {
                             vista.mostrarError.accept("Opción no válida");
-                            return true;
-                    }
+                            yield true; // Devuelve true para continuar
+                        }
+                    };
                 })
                 .orElseGet(() -> {
                     vista.mostrarError.accept("Entrada inválida");
@@ -376,26 +362,25 @@ public class ArtCientificoController {
         vista.mostrarMensaje.accept("3. ELIMINACION");
         vista.mostrarMensaje.accept("4. RESTAURACION");
         
-        vista.leerOpcion.get().ifPresentOrElse(
-            opcion -> {
-                final TipoEvento tipoEvento;
-                switch (opcion) {
-                    case 1: tipoEvento = TipoEvento.CREACION; break;
-                    case 2: tipoEvento = TipoEvento.ACTUALIZACION; break;
-                    case 3: tipoEvento = TipoEvento.ELIMINACION; break;
-                    case 4: tipoEvento = TipoEvento.RESTAURACION; break;
-                    default:
-                        vista.mostrarError.accept("Opción no válida");
-                        return;
-                }
-                
-                servicio.obtenerHistorialPorTipo(Optional.of(tipoEvento)).ifPresentOrElse(
-                    this::mostrarEventos,
-                    () -> vista.mostrarMensaje.accept("No hay eventos del tipo " + tipoEvento + " registrados")
-                );
-            },
-            () -> vista.mostrarError.accept("Entrada inválida")
-        );
+        // Mapear opciones a Tipos de Evento
+        java.util.Map<Integer, TipoEvento> mapaTipos = new java.util.HashMap<>();
+        mapaTipos.put(1, TipoEvento.CREACION);
+        mapaTipos.put(2, TipoEvento.ACTUALIZACION);
+        mapaTipos.put(3, TipoEvento.ELIMINACION);
+        mapaTipos.put(4, TipoEvento.RESTAURACION);
+        
+        vista.leerOpcion.get()
+            .flatMap(opcion -> Optional.ofNullable(mapaTipos.get(opcion))) // Obtener el TipoEvento del mapa como Optional
+            .ifPresentOrElse(
+                tipoEvento -> { // Si se encontró un TipoEvento válido
+                    servicio.obtenerHistorialPorTipo(Optional.of(tipoEvento))
+                        .ifPresentOrElse(
+                            this::mostrarEventos,
+                            () -> vista.mostrarMensaje.accept("No hay eventos del tipo " + tipoEvento + " registrados")
+                        );
+                },
+                () -> vista.mostrarError.accept("Opción no válida") // Si la opción no estaba en el mapa o la entrada era inválida
+            );
     }
     
     /**
@@ -448,26 +433,18 @@ public class ArtCientificoController {
      * @return una descripción del evento
      */
     private String obtenerDescripcionEvento(EventoHistorial evento) {
-        StringBuilder descripcion = new StringBuilder();
-        descripcion.append("Evento de ");
+        // Usar switch expression para obtener la descripción del tipo
+        String tipoDescripcion = switch (evento.getTipoEvento()) {
+            case CREACION -> "creación";
+            case ACTUALIZACION -> "actualización";
+            case ELIMINACION -> "eliminación";
+            case RESTAURACION -> "restauración";
+            default -> "tipo desconocido";
+        };
         
-        switch (evento.getTipoEvento()) {
-            case CREACION:
-                descripcion.append("creación");
-                break;
-            case ACTUALIZACION:
-                descripcion.append("actualización");
-                break;
-            case ELIMINACION:
-                descripcion.append("eliminación");
-                break;
-            case RESTAURACION:
-                descripcion.append("restauración");
-                break;
-            default:
-                descripcion.append("tipo desconocido");
-        }
-        
+        // Construir la descripción final usando StringBuilder
+        StringBuilder descripcion = new StringBuilder("Evento de ");
+        descripcion.append(tipoDescripcion);
         descripcion.append(" realizado el ");
         descripcion.append(evento.getFechaEvento().toLocalDate());
         descripcion.append(" a las ");
